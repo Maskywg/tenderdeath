@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>俯瞰人間：靈魂在無常中的必修課</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --cream: #f8f0e3;
+    --ivory: #fdf8f0;
+    --gold: #b8862a;
+    --gold-light: #d4a84c;
+    --dark: #2a1f14;
+    --mid: #5a4228;
+    --soft: #9a7a58;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: #e8d9c0;
+    color: var(--dark);
+    font-family: 'Georgia', '華康明體', 'Noto Serif TC', serif;
+    overflow-x: hidden;
+  }
+
+  #bg-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  #content {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Hero ── */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 40px;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.85rem;
+    letter-spacing: 0.4em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeUp 1.2s ease 0.4s forwards;
+  }
+
+  .hero-title {
+    font-size: clamp(2.4rem, 6vw, 5rem);
+    font-weight: 400;
+    line-height: 1.25;
+    color: #2a1a0a;
+    text-shadow: 0 1px 6px rgba(255,235,190,0.6);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 1.2s ease 0.7s forwards;
+  }
+
+  .hero-subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.35rem);
+    color: #4a3218;
+    line-height: 1.8;
+    max-width: 640px;
+    margin-bottom: 60px;
+    opacity: 0;
+    animation: fadeUp 1.2s ease 1s forwards;
+  }
+
+  .hero-divider {
+    width: 1px;
+    height: 80px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    margin: 0 auto;
+    opacity: 0;
+    animation: fadeUp 1.2s ease 1.3s forwards;
+  }
+
+  .scroll-hint {
+    margin-top: 20px;
+    font-size: 0.78rem;
+    letter-spacing: 0.3em;
+    color: var(--soft);
+    opacity: 0;
+    animation: fadeUp 1.2s ease 1.6s forwards;
+  }
+
+  /* ── Author card ── */
+  #author-card {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    max-width: 740px;
+    width: 100%;
+    background: rgba(255,248,236,0.88);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(184,134,42,0.25);
+    border-radius: 20px;
+    padding: 32px 40px;
+    margin: 0 auto 80px;
+    opacity: 0;
+    animation: fadeUp 1.2s ease 0.5s forwards;
+    box-shadow: 0 8px 32px rgba(80,48,16,0.14);
+  }
+
+  .author-photo {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center top;
+    flex-shrink: 0;
+    border: 2px solid rgba(201,168,76,0.4);
+    box-shadow: 0 4px 20px rgba(42,33,24,0.12);
+  }
+
+  .author-info { text-align: left; }
+
+  .author-name {
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--dark);
+    margin-bottom: 6px;
+    letter-spacing: 0.08em;
+  }
+
+  .author-title {
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    margin-bottom: 14px;
+  }
+
+  .author-bio {
+    font-size: 0.95rem;
+    line-height: 1.9;
+    color: var(--mid);
+  }
+
+  @media (max-width: 560px) {
+    #author-card { flex-direction: column; text-align: center; padding: 24px 20px; }
+    .author-info { text-align: center; }
+  }
+
+  /* ── Audio bar ── */
+  #audio-bar {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(248, 244, 238, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 40px;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(42, 33, 24, 0.1);
+  }
+
+  #audio-bar:hover {
+    background: rgba(248, 244, 238, 0.96);
+    border-color: var(--gold);
+  }
+
+  .audio-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .audio-icon svg { fill: white; }
+
+  .audio-waves {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 20px;
+  }
+
+  .audio-waves span {
+    display: block;
+    width: 3px;
+    background: var(--gold);
+    border-radius: 2px;
+    animation: wave 1.2s ease-in-out infinite;
+  }
+
+  .audio-waves span:nth-child(1) { height: 8px; animation-delay: 0s; }
+  .audio-waves span:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+  .audio-waves span:nth-child(3) { height: 12px; animation-delay: 0.2s; }
+  .audio-waves span:nth-child(4) { height: 20px; animation-delay: 0.3s; }
+  .audio-waves span:nth-child(5) { height: 10px; animation-delay: 0.4s; }
+
+  .audio-waves.paused span { animation-play-state: paused; }
+
+  .audio-label {
+    font-size: 0.75rem;
+    color: var(--soft);
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
+
+  @keyframes wave {
+    0%, 100% { transform: scaleY(0.4); }
+    50% { transform: scaleY(1); }
+  }
+
+  /* ── Sections ── */
+  .chapter {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 40px 100px;
+    gap: 56px;
+  }
+
+  /* Slide image */
+  .chapter-slide {
+    width: 100%;
+    max-width: 900px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 12px 48px rgba(42,33,24,0.13);
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+  }
+
+  .chapter-slide.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .chapter-slide img {
+    width: 100%;
+    display: block;
+  }
+
+  .chapter-inner {
+    max-width: 760px;
+    width: 100%;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.9s ease 0.2s, transform 0.9s ease 0.2s;
+    background: rgba(255,248,236,0.88);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 40px 48px;
+    box-shadow: 0 6px 32px rgba(80,48,16,0.14);
+    border: 1px solid rgba(184,134,42,0.18);
+  }
+
+  .chapter-inner.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .chapter-number {
+    font-size: 0.72rem;
+    letter-spacing: 0.5em;
+    color: var(--gold);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .chapter-number::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--gold-light), transparent);
+    max-width: 120px;
+  }
+
+  .chapter-title {
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--dark);
+    margin-bottom: 32px;
+  }
+
+  .chapter-line {
+    width: 48px;
+    height: 2px;
+    background: var(--gold);
+    margin-bottom: 32px;
+    border-radius: 1px;
+  }
+
+  .chapter-text {
+    font-size: clamp(1.05rem, 2vw, 1.2rem);
+    line-height: 2.1;
+    color: var(--mid);
+    font-weight: 400;
+  }
+
+  /* ── Dual photo layout ── */
+  .chapter-slide-duo {
+    width: 100%;
+    max-width: 900px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+  }
+
+  .chapter-slide-duo.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .chapter-slide-duo img {
+    width: 100%;
+    display: block;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(42,33,24,0.13);
+  }
+
+  /* ── Closing ── */
+  #closing {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 40px;
+    text-align: center;
+  }
+
+  .closing-divider {
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--gold));
+    margin-bottom: 40px;
+  }
+
+  .closing-quote {
+    font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+    line-height: 2;
+    color: var(--mid);
+    max-width: 640px;
+    margin-bottom: 40px;
+    opacity: 0;
+    transition: opacity 0.9s ease;
+  }
+
+  .closing-quote.visible { opacity: 1; }
+
+  .closing-author {
+    font-size: 0.85rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    opacity: 0;
+    transition: opacity 0.9s ease 0.4s;
+  }
+
+  .closing-author.visible { opacity: 1; }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Progress bar ── */
+  #progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: linear-gradient(to right, var(--gold), var(--gold-light));
+    z-index: 200;
+    transition: width 0.1s linear;
+  }
+
+  /* ── Separator sections ── */
+  .sep {
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(201, 168, 76, 0.3), transparent);
+    margin: 0 10%;
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<canvas id="bg-canvas"></canvas>
+
+<!-- Audio -->
+<audio id="bgm" loop preload="auto">
+  <source src="霧中弦影.mp3" type="audio/mpeg">
+</audio>
+
+<div id="audio-bar" onclick="toggleAudio()">
+  <div class="audio-icon">
+    <svg id="audio-svg" viewBox="0 0 24 24" width="14" height="14">
+      <path d="M8 5v14l11-7z"/>
+    </svg>
+  </div>
+  <div class="audio-waves paused" id="audio-waves">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <span class="audio-label">霧中弦影</span>
+</div>
+
+<div id="content">
+
+  <!-- Hero -->
+  <section id="hero">
+    <div class="hero-eyebrow">郭強生 · 靈魂觀測報告</div>
+    <h1 class="hero-title">俯瞰人間<br>靈魂在無常中的必修課</h1>
+    <p class="hero-subtitle">如果我們站在宇宙的高度，安靜地俯瞰人間，<br>生與死，不過是氣的聚散、季節的更迭。</p>
+    <div class="hero-divider"></div>
+    <div class="scroll-hint">向下滾動 · Scroll</div>
+  </section>
+
+  <!-- Author card -->
+  <div id="author-card">
+    <img class="author-photo" src="郭強生照片.png" alt="郭強生">
+    <div class="author-info">
+      <div class="author-name">郭強生</div>
+      <div class="author-title">作家 · 學者 · 靈魂的觀測者</div>
+      <p class="author-bio">
+        1964年生，美國紐約大學戲劇博士。<br>
+        回國後於東華大學任教，協助創立創作與英語文學研究所；<br>
+        為照顧失智父親，搬回台北，轉任國立台北教育大學語文與創作學系教授，日前正式退休。<br>
+        以陪病歷程寫就《何不認真來悲傷》，直視衰老與死亡，<br>
+        淬鍊出一句最純粹的信念：一個人怎麼活，就會怎麼死。
+      </p>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- Chapter 1 -->
+  <section class="chapter">
+    <div class="chapter-slide"><img src="slides/slide-000.jpg" alt="俯瞰人間：靈魂在無常中的必修課"></div>
+    <div class="chapter-inner">
+      <div class="chapter-number">CHAPTER ONE · 跳脫凡人恐懼</div>
+      <h2 class="chapter-title">俯瞰人間</h2>
+      <div class="chapter-line"></div>
+      <p class="chapter-text">如果我們站在宇宙的高度，安靜地俯瞰人間，生與死，不過是氣的聚散、季節的更迭。今天，讓我們放下對失去的恐懼，透過文學家郭強生的生命體悟，以上帝的視角，重新凝視靈魂的本質。</p>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- Chapter 2 -->
+  <section class="chapter">
+    <div class="chapter-slide"><img src="slides/slide-002.jpg" alt="妄念與執著：為何我們要把死亡當作敵人？"></div>
+    <div class="chapter-inner">
+      <div class="chapter-number">CHAPTER TWO · 妄念與執著</div>
+      <h2 class="chapter-title">為何我們要把死亡當作敵人？</h2>
+      <div class="chapter-line"></div>
+      <p class="chapter-text">世人總在病榻上插滿管子，試著打敗死神，彷彿對抗才是勇敢。但盲目地扮演生命鬥士，去對抗不可逆的自然，往往讓我們在生命消逝時，只剩下屈辱與憤怒。那種對長度的貪婪，其實是忘了問自己，究竟想要什麼樣的尊嚴與品質。</p>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- Chapter 3 -->
+  <section class="chapter">
+    <div class="chapter-slide"><img src="slides/slide-004.jpg" alt="死亡的真相"></div>
+    <div class="chapter-inner">
+      <div class="chapter-number">CHAPTER THREE · 自然律動</div>
+      <h2 class="chapter-title">死亡的真相：靈魂的護圍</h2>
+      <div class="chapter-line"></div>
+      <p class="chapter-text">當我們從高處望去，死亡，從來不是殘暴的剝奪。它像是一道山川地景，是自然存在的邊界，更是保護靈魂的護圍。與其在恐懼中被死神吞噬，不如平靜地安排自己的歸屬，為有限的時間注入生命，用溫柔，去接納這份必然。</p>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- Chapter 4 -->
+  <section class="chapter">
+    <div class="chapter-slide"><img src="slides/slide-006.jpg" alt="生命的總和"></div>
+    <div class="chapter-inner">
+      <div class="chapter-number">CHAPTER FOUR · 生命的總和</div>
+      <h2 class="chapter-title">你怎麼活，就會怎麼死</h2>
+      <div class="chapter-line"></div>
+      <p class="chapter-text">造物主並沒有為死亡寫下標準答案。郭強生看透了一個殘酷卻純粹的道理：你怎麼死，其實就是你怎麼活的。死亡是一面鏡子，如果你一輩子都在逃避真相、盲目跟風，臨終時必然充滿恐慌。善終，從來不是最後那一刻的運氣，而是活著時，每一個選擇的累積。</p>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- Chapter 5 -->
+  <section class="chapter">
+    <div class="chapter-slide"><img src="slides/slide-008.jpg" alt="虛榮的晚年"></div>
+    <div class="chapter-inner">
+      <div class="chapter-number">CHAPTER FIVE · 虛榮的晚年</div>
+      <h2 class="chapter-title">盲目「加法」的樂活迷思</h2>
+      <div class="chapter-line"></div>
+      <p class="chapter-text">看著人間的老者，常常拚命擠滿行程、到處打卡，試著證明自己活得很好、很樂活。但這種加法，多半只是為了迎合世俗的眼光。如果不懂得靜下來面對舊傷口，再多的狂歡，也掩蓋不住靈魂深處的空虛。</p>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- Chapter 6 -->
+  <section class="chapter">
+    <div class="chapter-slide"><img src="slides/slide-010.jpg" alt="永恆的財富"></div>
+    <div class="chapter-inner">
+      <div class="chapter-number">CHAPTER SIX · 永恆的財富</div>
+      <h2 class="chapter-title">減法人生與「無形資產」</h2>
+      <div class="chapter-line"></div>
+      <p class="chapter-text">當肉體逐漸衰老，造化剝奪了我們所有的外在標籤與消費能力時，靈魂還剩下什麼？人生下半場，需要的是減法。趁著清醒，把那些死神奪不走的無形資產安放好。也許，那只是生命裡一次深刻的感動，或是一首，當你躺在床上無法動彈時，還能在腦海裡獨自輕唱的歌。</p>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- Chapter 7 -->
+  <section class="chapter">
+    <div class="chapter-slide"><img src="slides/slide-012.jpg" alt="社會的詛咒"></div>
+    <div class="chapter-inner">
+      <div class="chapter-number">CHAPTER SEVEN · 社會的詛咒</div>
+      <h2 class="chapter-title">「孤獨死」為何被視為悲劇？</h2>
+      <div class="chapter-line"></div>
+      <p class="chapter-text">凡人害怕孤獨死，總以為那代表著淒涼與失敗。但其實，這只是社會厭老文化製造出來的悲情詛咒。每個靈魂的到來與離去，本就是獨自一人的平靜旅程。一個人靜靜地走，有什麼好悲哀的呢？</p>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- Chapter 8 -->
+  <section class="chapter">
+    <div class="chapter-slide"><img src="slides/slide-014.jpg" alt="驕傲的謝幕"></div>
+    <div class="chapter-inner">
+      <div class="chapter-number">CHAPTER EIGHT · 驕傲的謝幕</div>
+      <h2 class="chapter-title">在孤獨中自我成全</h2>
+      <div class="chapter-line"></div>
+      <p class="chapter-text">最堅韌的靈魂，是不依賴他人掌聲的靈魂。如果一個人，能把自己安穩地照顧到最後一天，那是非常值得驕傲的謝幕。晚年可以抱持希望，但不要把善終的責任指望在別人身上。懂得獨處，拿回生命的完全主導權，你才能自由地跑完這場馬拉松。</p>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- Chapter 9 -->
+  <section class="chapter">
+    <div class="chapter-slide"><img src="slides/slide-016.jpg" alt="凡人的面具"></div>
+    <div class="chapter-inner">
+      <div class="chapter-number">CHAPTER NINE · 凡人的面具</div>
+      <h2 class="chapter-title">撕下「流利的自我說辭」</h2>
+      <div class="chapter-line"></div>
+      <p class="chapter-text">我們都太習慣，用一套流利的社會台詞與正向語言來包裝自己，甚至用受害者的面具來逃避痛楚。但造物主，只看靈魂最真實的底色。真正的勇敢，是勇敢撕下那些粉飾太平的說辭，在心底，誠實地接納自己的脆弱與悲傷。</p>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- Chapter 10 -->
+  <section class="chapter">
+    <div class="chapter-slide"><img src="slides/slide-018.jpg" alt="與造化交手"></div>
+    <div class="chapter-inner">
+      <div class="chapter-number">CHAPTER TEN · 與造化交手</div>
+      <h2 class="chapter-title">記錄靈魂與真相的搏鬥</h2>
+      <div class="chapter-line"></div>
+      <p class="chapter-text">無論你是不是作家，生命都不該是為了尋求世俗廉價的標準答案。活著的最高意義，是願意與造化交手，記錄下靈魂與真相之間，最真實的搏鬥。保留人性的複雜，不妥協地去淬鍊經驗裡的真，生命，自然就會發光。</p>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- Chapter 11 -->
+  <section class="chapter">
+    <div class="chapter-slide"><img src="slides/slide-020.jpg" alt="存在的印記"></div>
+    <div class="chapter-inner">
+      <div class="chapter-number">CHAPTER ELEVEN · 存在的印記</div>
+      <h2 class="chapter-title">活過，就會長出文學</h2>
+      <div class="chapter-line"></div>
+      <p class="chapter-text">所有的無常與創痛，其實都是滋養靈魂的養分。郭強生用他的人生證明了一件事：活過，就會長出文學。只要你誠實地去活、去痛、去愛，將結痂剝開，與自己達成和解。那麼，你的人生本身，就是一部最動人的經典。</p>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- Chapter 12 -->
+  <section class="chapter">
+    <div class="chapter-slide"><img src="slides/slide-022.jpg" alt="終極的領悟"></div>
+    <div class="chapter-inner">
+      <div class="chapter-number">CHAPTER TWELVE · 終極的領悟</div>
+      <h2 class="chapter-title">在無常中淬鍊的溫柔哲學</h2>
+      <div class="chapter-line"></div>
+      <p class="chapter-text">從全知的視角來看，無常，本就是宇宙的常態。我們無法打敗死神，也無法強留青春，但我們可以在有限的歲月裡，用絕對的真實與溫柔，圓滿自己與他人。這趟靈魂的旅程，不在於走了多遠，而在於我們，是否真正溫柔地擁有過自己。</p>
+    </div>
+  </section>
+
+  <!-- Closing -->
+  <section id="closing">
+    <div class="closing-divider"></div>
+    <p class="closing-quote">
+      這趟靈魂的旅程，不在於走了多遠，<br>
+      而在於我們，是否真正溫柔地擁有過自己。
+    </p>
+    <div class="closing-author">郭強生 · 靈魂在無常中的必修課 · Edited by Masky Wang</div>
+  </section>
+
+</div><!-- #content -->
+
+<script>
+// ── Peeling Paint Wall Background ─────────────────────────────
+(function() {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+
+  function rngFactory(seed) {
+    let s = seed >>> 0;
+    return () => { s = (Math.imul(1664525, s) + 1013904223) >>> 0; return s / 4294967296; };
+  }
+  const rng = rngFactory(31337);
+
+  // ── Static peeling-paint texture (rebuilt on resize) ─────────
+  let staticLayer = null;
+
+  function buildStaticLayer() {
+    const oc = document.createElement('canvas');
+    oc.width = W; oc.height = H;
+    const oc2 = oc.getContext('2d');
+
+    // Base coat: off-white / light warm grey
+    const base = oc2.createLinearGradient(0, 0, W, H);
+    base.addColorStop(0,   '#edeae4');
+    base.addColorStop(0.4, '#e8e4dc');
+    base.addColorStop(0.7, '#eae6de');
+    base.addColorStop(1,   '#e4e0d8');
+    oc2.fillStyle = base;
+    oc2.fillRect(0, 0, W, H);
+
+    // Subtle wall texture noise (very fine)
+    for (let i = 0; i < 18000; i++) {
+      const x = rng() * W, y = rng() * H;
+      const a = 0.012 + rng() * 0.022;
+      oc2.fillStyle = rng() > 0.5
+        ? `rgba(255,255,252,${a})`
+        : `rgba(100,80,60,${a})`;
+      oc2.fillRect(x, y, 1, 1);
+    }
+
+    // ── Vertical rust/brown streak columns ──────────────────
+    const COLS = 7 + Math.floor(rng() * 5);
+    for (let c = 0; c < COLS; c++) {
+      const cx   = (0.05 + rng() * 0.9) * W;
+      const colW = 6 + rng() * 28;           // column spread width
+      // Number of patch clusters in this column
+      const clusters = 4 + Math.floor(rng() * 8);
+      for (let cl = 0; cl < clusters; cl++) {
+        const cy    = rng() * H * 1.1 - H * 0.05;
+        const clH   = 30 + rng() * 180;      // cluster vertical extent
+        const blobs = 5 + Math.floor(rng() * 14);
+        for (let b = 0; b < blobs; b++) {
+          const bx = cx + (rng() - 0.5) * colW * 2;
+          const by = cy + rng() * clH;
+          const bw = 0.8 + rng() * 5;
+          const bh = 0.8 + rng() * 10;
+          const alpha = 0.10 + rng() * 0.22;
+          // Rust colour variants
+          const hue = 8 + rng() * 18;       // 8-26°
+          const sat = 45 + rng() * 30;
+          const lit = 28 + rng() * 22;
+          oc2.save();
+          oc2.translate(bx, by);
+          oc2.rotate((rng() - 0.5) * 0.3);
+          oc2.beginPath();
+          // Slightly rounded irregular rect
+          const r2 = Math.min(bw, bh) * 0.35;
+          oc2.roundRect(-bw/2, -bh/2, bw, bh, r2);
+          oc2.fillStyle = `hsla(${hue},${sat}%,${lit}%,${alpha})`;
+          oc2.fill();
+          oc2.restore();
+        }
+        // Fine vertical drip line connecting cluster
+        if (rng() > 0.4) {
+          oc2.beginPath();
+          oc2.moveTo(cx + (rng()-0.5)*colW*0.5, cy);
+          oc2.lineTo(cx + (rng()-0.5)*colW*0.5, cy + clH);
+          oc2.lineWidth = 0.5 + rng() * 1.5;
+          oc2.strokeStyle = `hsla(${10+rng()*14},${50+rng()*20}%,${30+rng()*15}%,${0.05+rng()*0.08})`;
+          oc2.stroke();
+        }
+      }
+    }
+
+    // ── Scattered micro-flecks everywhere ───────────────────
+    for (let i = 0; i < 600; i++) {
+      const x = rng() * W, y = rng() * H;
+      const r = 0.4 + rng() * 1.5;
+      const alpha = 0.04 + rng() * 0.12;
+      oc2.beginPath();
+      oc2.arc(x, y, r, 0, Math.PI*2);
+      oc2.fillStyle = `hsla(${8+rng()*20},${40+rng()*30}%,${25+rng()*25}%,${alpha})`;
+      oc2.fill();
+    }
+
+    // ── Subtle shadow vignette ───────────────────────────────
+    const vig = oc2.createRadialGradient(W*.5, H*.5, 0, W*.5, H*.5, Math.max(W,H)*.65);
+    vig.addColorStop(0, 'rgba(220,215,205,0)');
+    vig.addColorStop(1, 'rgba(80,65,50,0.18)');
+    oc2.fillStyle = vig;
+    oc2.fillRect(0, 0, W, H);
+
+    staticLayer = oc;
+  }
+
+  // ── Falling paint chips (animation layer) ────────────────────
+  const CHIPS = 18;
+  const chips = [];
+
+  function spawnChip(useRng) {
+    const r = useRng || rng;
+    // Chip shape: thin elongated splinter
+    const w = 2 + r() * 7;
+    const h = 8 + r() * 28;
+    const sides = 4 + Math.floor(r() * 3);
+    const pts = Array.from({ length: sides }, (_, i) => {
+      const a = (i / sides) * Math.PI * 2;
+      return {
+        x: Math.cos(a) * (0.4 + r()*0.2),
+        y: Math.sin(a) * (0.4 + r()*0.2)
+      };
+    });
+    return {
+      x:    r() * 1.1,
+      y:    -0.05 - r() * 0.3,
+      w, h,
+      pts,
+      rot:   r() * Math.PI * 2,
+      vx:    (r() - 0.5) * 0.0008,
+      vy:    0.0005 + r() * 0.0012,
+      vrot:  (r() - 0.5) * 0.018,
+      hue:   8 + r() * 18,
+      sat:   42 + r() * 28,
+      lit:   26 + r() * 20,
+      alpha: 0.18 + r() * 0.2,
+      // "peeling curl" — starts curled, flattens as it falls
+      curl:  0.6 + r() * 0.4,
+      dead:  false
+    };
+  }
+
+  for (let i = 0; i < CHIPS; i++) {
+    const c = spawnChip(rng);
+    c.y = rng() * 1.1; // stagger initial positions
+    chips.push(c);
+  }
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    buildStaticLayer();
+  }
+  resize();
+  window.addEventListener('resize', () => { resize(); });
+
+  function drawChip(c) {
+    const cx = c.x * W, cy = c.y * H;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(c.rot);
+    // Curl effect: squash Y slightly to simulate bent chip
+    ctx.scale(c.w, c.h * (0.6 + c.curl * 0.4));
+
+    ctx.shadowColor = 'rgba(60,30,10,0.25)';
+    ctx.shadowBlur  = 4 + c.curl * 6;
+    ctx.shadowOffsetY = 2 + c.curl * 3;
+
+    ctx.beginPath();
+    c.pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.closePath();
+
+    ctx.fillStyle = `hsla(${c.hue},${c.sat}%,${c.lit}%,${c.alpha})`;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  let t = 0;
+  function draw() {
+    requestAnimationFrame(draw);
+    t++;
+
+    // Draw static texture
+    if (staticLayer) ctx.drawImage(staticLayer, 0, 0);
+
+    // Animate chips
+    chips.forEach((c, idx) => {
+      c.x   += c.vx + Math.sin(t * 0.008 + idx) * 0.0002;
+      c.y   += c.vy;
+      c.rot += c.vrot;
+      c.curl = Math.max(0, c.curl - 0.0008); // flatten as falling
+
+      if (c.y > 1.1) {
+        chips[idx] = spawnChip();
+      } else {
+        drawChip(c);
+      }
+    });
+  }
+  draw();
+})();
+
+// ── Scroll reveal ──────────────────────────────────────────────
+const revealEls = document.querySelectorAll('.chapter-inner, .chapter-slide, .chapter-slide-duo, .closing-quote, .closing-author');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); }
+  });
+}, { threshold: 0.15 });
+
+revealEls.forEach(el => observer.observe(el));
+
+// ── Progress bar ──────────────────────────────────────────────
+const progress = document.getElementById('progress');
+window.addEventListener('scroll', () => {
+  const docH = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.width = (window.scrollY / docH * 100) + '%';
+});
+
+// ── Audio ──────────────────────────────────────────────────────
+const bgm = document.getElementById('bgm');
+const audioSvg = document.getElementById('audio-svg');
+const audioWaves = document.getElementById('audio-waves');
+let playing = false;
+
+bgm.volume = 0.55;
+
+function toggleAudio() {
+  if (!playing) {
+    bgm.play().then(() => {
+      playing = true;
+      audioSvg.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+      audioWaves.classList.remove('paused');
+    }).catch(() => {});
+  } else {
+    bgm.pause();
+    playing = false;
+    audioSvg.innerHTML = '<path d="M8 5v14l11-7z"/>';
+    audioWaves.classList.add('paused');
+  }
+}
+
+// Auto-start on first user interaction
+let autoStarted = false;
+function autoStart() {
+  if (!autoStarted) {
+    autoStarted = true;
+    bgm.play().then(() => {
+      playing = true;
+      audioSvg.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+      audioWaves.classList.remove('paused');
+    }).catch(() => {});
+  }
+}
+document.addEventListener('scroll', autoStart, { once: true });
+document.addEventListener('click', autoStart, { once: true });
+</script>
+
+</body>
+</html>
